@@ -1,0 +1,18 @@
+# абстрактный, один. Будет получать из реквест спеков хэдер,вытягивать его оттуда и хранить. Получать url, который мы передаем через реквест спеки,
+# и получать респонс спеку
+
+
+from abc import ABC, abstractmethod
+from typing import Dict, Callable
+from src.main.api.models.mentor.base_model import BaseModel
+
+class Requester(ABC):
+    def __init__(self, request_spec: Dict[str, str], response_spec: Callable):
+        self.headers = request_spec["headers"]
+        self.base_url = request_spec["base_url"]
+        self.response_spec = response_spec
+
+    @abstractmethod
+    def post(self, model: BaseModel): ...
+
+
