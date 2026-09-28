@@ -18,7 +18,6 @@ class TestCreditRepay:
     # позитивный тест
     def test_credit_repay(self, active_credit_for_repay: dict, api_client: ApiManagerSenior, db_session: Session) -> None:
         balance_before = db_session.query(Account.balance).filter_by(id=active_credit_for_repay["account_id"]).scalar()
-        api_client.user_steps.authorize(active_credit_for_repay["token_user"])
         with allure.step('Погашение кредита'):
             repay_data = CreditRepayRequestMiddle(
                 creditId=active_credit_for_repay["credit_id"],
@@ -29,14 +28,13 @@ class TestCreditRepay:
 
         balance_after = db_session.query(Account.balance).filter_by(id=active_credit_for_repay["account_id"]).scalar()
 
-        assert response_repay.creditId is not None
-        assert response_repay.creditId == active_credit_for_repay["credit_id"]
-        assert balance_before != balance_after
+        assert response_repay.creditId is not None, f'Ошибка: {response_repay.creditId} отсутствует в отете сервера'
+        assert response_repay.creditId == active_credit_for_repay["credit_id"], f'Ошибка: ID кредита не совпадает с ожидаемым'
+        assert balance_before != balance_after, f'Ошибка: баланс до запроса и баланс после запроса не совпадают'
 
     # негативный тест, когда невозможно взять 2 кредита на 1 счет
     def test_credit_request_invalid(self, api_client: ApiManagerSenior,db_session: Session, active_credit_for_repay: dict) :
         test_data = DataGenerator.get_credit_data()
-        api_client.user_steps.authorize(active_credit_for_repay["token_user"])
         with allure.step('Попытка взять второй кредит на тот же счет '):
             repay_data = CreditRequestMiddle(
                 accountId=active_credit_for_repay["account_id"],
@@ -51,7 +49,7 @@ class TestCreditRepay:
             )
 
             credit_count = CreditCrudDb.get_credit_count(db_session,active_credit_for_repay["account_id"])
-            assert credit_count == 1
+            assert credit_count == 1, f'Ошибка: сумма кредитов не равна 1'
 
 
 

@@ -1,6 +1,3 @@
-
-
-
 import pytest
 from src.main.api.generators.model_generator_senior import RandomModelGeneratorSenior
 from src.main.api.models.middle.create_user_request_middle import CreateUserRequestMiddle

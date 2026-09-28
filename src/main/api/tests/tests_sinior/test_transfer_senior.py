@@ -15,7 +15,6 @@ from src.main.api.models.middle.transfer_request_middle import TransferRequestMi
 
 class TestTransfer:
     def test_transfer_senior_valid(self,api_client: ApiManagerSenior, standart_role_plus_accounts_popolnenie: dict, db_session: Session):
-        api_client.user_steps.authorize(standart_role_plus_accounts_popolnenie['token_user'])
         test_data = DataGenerator.get_credit_data()
 
         with allure.step('Перевод со счета на счет'):
@@ -40,7 +39,6 @@ class TestTransfer:
 
         # негативный тест на этот же тест-кейс
     def test_transfer_senior_invalid(self, api_client: ApiManagerSenior, user_fixture_senior: dict, db_session: Session, standart_role_plus_accounts_popolnenie:dict):
-        api_client.user_steps.authorize(standart_role_plus_accounts_popolnenie['token_user'])
         test_data = DataGenerator.get_credit_data()
 
         with allure.step('Перевод средств'):
@@ -57,4 +55,4 @@ class TestTransfer:
             )
 
             transfer_from_db_invalid = TransactionCrud.get_transaction_id(db_session, transfer_request.toAccountId)
-            assert transfer_from_db_invalid is None
+            assert transfer_from_db_invalid is None, f'Ошибка: транзакция ошибочно сохранена в БД после неуспешного перевода'

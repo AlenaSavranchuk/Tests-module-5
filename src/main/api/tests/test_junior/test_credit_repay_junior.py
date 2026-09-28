@@ -65,11 +65,10 @@ class TestCreditRepay:
                 }
             )
 
-            assert credit_request.status_code == 201
+            assert credit_request.status_code == 201, 'Ошибка: вернулся некорректный статус-код при создании кредита'
 
             credit_repay_db = CreditCrudDb.get_credit_id(db_session, credit_id)
-            assert credit_repay_db.balance == 0
-
+            assert credit_repay_db.balance == 0, 'Ошибка: баланс кредита в базе данных не равен нулю'
 
     # для негативного теста, тут не хватает денег
     def test_credit_request_invalid(self, secret_credit_user_with_accounts: dict, db_session: Session):
@@ -110,9 +109,10 @@ class TestCreditRepay:
                 }
             )
 
-            assert credit_repay_request_invalid2.status_code == 422
+            assert credit_repay_request_invalid2.status_code == 422, 'Ошибка: вернулся некорректный статус-код при отправке невалидного запроса'
 
             credit_db = CreditCrudDb.get_credit_id(db_session, credit_id)
-            assert credit_db.balance == - test_data['credit_amount']
+            assert credit_db.balance == - test_data['credit_amount'], 'Ошибка: баланс кредита в базе данных изменился после неуспешного запроса'
+
 
 

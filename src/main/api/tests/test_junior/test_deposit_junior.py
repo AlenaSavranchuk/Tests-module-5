@@ -7,7 +7,7 @@ from src.main.api.generators.data_generator import DataGenerator
 
 @pytest.mark.api
 
-class TestDepositAccount():
+class TestDepositAccount:
     url = "http://localhost:4111"
     def test_bank_account_deposit_valid(self,user_with_accounts: dict, db_session: Session):
         token = user_with_accounts['token_user']
@@ -34,7 +34,7 @@ class TestDepositAccount():
             )
 
             # проверяем, пополнился ли счет на сумму пополнения
-            assert popolnenie_deposit_account.status_code == 200
+            assert popolnenie_deposit_account.status_code == 200, f'Ошибка: не верный статус-код с ответа сервера {popolnenie_deposit_account.status_code}'
             assert popolnenie_deposit_account.json()['balance'] == test_data['deposit_amount']
 
             account_db = AccountCrudDb.get_account_by_id(db_session, account_id1)
@@ -69,5 +69,5 @@ class TestDepositAccount():
             account_after = AccountCrudDb.get_account_by_id(db_session, account_id)
             balance_after = account_after.balance if account_after else 0
 
-            assert bank_account_deposit_invalid.status_code == 401
+            assert bank_account_deposit_invalid.status_code == 401, f'Ошибка: не верный статус-код с ответа сервера: {bank_account_deposit_invalid.status_code}'
             assert balance_after == balance_before, f"Баланс был: {balance_before}, стал: {balance_after}"

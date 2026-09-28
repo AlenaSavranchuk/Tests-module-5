@@ -1,8 +1,6 @@
-import requests
 import pytest
 import allure
 from sqlalchemy.orm import Session
-
 from src.main.api.db.crud.account_crud import AccountCrudDb
 from src.main.api.specs.request_specs_middle import RequestSpecs
 from src.main.api.models.middle.popolnenie_deposit_account_request import PopolnenieDepositAccountRequestMidlle
@@ -18,8 +16,9 @@ class TestDepositAccount:
         account_id1 = user_with_accounts['account_1']
         test_data = DataGenerator.get_credit_data()
         user_spec = user_with_accounts['user_spec']
+        balance_before = AccountCrudDb.get_account_balance(db_session, account_id1)
 
-        with allure.step('1. Пополняем счет'):
+        with allure.step('Пополняем счет'):
             popolnenie_deposit_account =PopolnenieDepositAccountRequestMidlle(
                 accountId = account_id1,
                 amount = test_data['deposit_amount'],
@@ -36,9 +35,10 @@ class TestDepositAccount:
                 attachment_type=allure.attachment_type.JSON  # Говорим Allure красиво подсветить JSON
             )
 
-        assert popolnenie_deposit_account.balance == test_data['deposit_amount']
+        assert popolnenie_deposit_account.balance == test_data['deposit_amount'], f'Оишибка: баланс в запросе на пополнение не равен балансу в запросе ответа от сервера'
+
         popolnenie_deposit_account_db = AccountCrudDb.get_account_balance(db_session, account_id1)
-        assert popolnenie_deposit_account_db == test_data['deposit_amount']
+        assert popolnenie_deposit_account_db == balance_before + test_data['deposit_amount'], f'Ошибка: баланс рассчитан неверно'
 
     # негативный тест на пополнение счета, где не передается токен авторизации
     def test_bank_account_deposit_invalid(self,user_with_accounts: dict, db_session: Session):
@@ -69,5 +69,5 @@ class TestDepositAccount:
         db_session.rollback()
         balance_after = AccountCrudDb.get_account_balance(db_session, account_id1)
 
-        assert pop.status_code == 401
-        assert balance_before == balance_after
+        assert pop.status_code == 401, f'Ошибка: вернулся не ожидаемый статус-код: {pop.status_code}'
+        assert balance_before == balance_after, f'Ошибка: баланс изменился после не авторизованного запроса'

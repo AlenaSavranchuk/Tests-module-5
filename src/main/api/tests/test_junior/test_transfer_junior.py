@@ -58,15 +58,17 @@ class TestTransfer:
                 attachment_type=allure.attachment_type.JSON  # Говорим Allure красиво подсветить JSON
             )
 
-            assert transfer_between_accounts.status_code == 200
-            assert transfer_between_accounts.json().get('fromAccountIdBalance') == 0
+            assert transfer_between_accounts.status_code == 200, f'Ошибка: не ожидаемый статус-код {transfer_between_accounts.status_code}'
+            assert transfer_between_accounts.json().get('fromAccountIdBalance') == 0, 'Ошибка: баланс счета отправителя после перевода не равен нулю'
 
             account_1_db = AccountCrudDb.get_account_by_id(db_session, account_id1)
             account_2_db = AccountCrudDb.get_account_by_id(db_session, account_id2)
-            assert account_1_db.balance == 0
+            assert account_1_db.balance == 0, 'Ошибка: баланс первого счета в базе данных после перевода не равен нулю'
+            assert account_2_db.balance == 0, 'Ошибка: баланс второго счета в базе данных после перевода не равен нулю'
 
 
-# негативный тест на этот же тест-кейс (без пополнения переводим, то есть,переводить нечего)
+
+    # негативный тест на этот же тест-кейс (без пополнения переводим, то есть,переводить нечего)
     def test_transfer_junior_invalid(self,user_with_accounts: dict, db_session: Session):
         with allure.step('1. Пополнение счета'):
             test_data = DataGenerator.get_credit_data()
@@ -100,8 +102,8 @@ class TestTransfer:
                 attachment_type=allure.attachment_type.JSON  # Говорим Allure красиво подсветить JSON
             )
 
-            assert transfer_between_accounts.status_code == 422
-            assert transfer_between_accounts.json().get('error') is not None
+            assert transfer_between_accounts.status_code == 422, 'Ошибка: вернулся некорректный статус-код при обработке невалидного перевода'
+            assert transfer_between_accounts.json().get('error') is not None, 'Ошибка: в ответе сервера отсутствует тело или текст ошибки'
 
             account_1_after = AccountCrudDb.get_account_by_id(db_session, account_id1)
             account_2_after = AccountCrudDb.get_account_by_id(db_session, account_id2)
@@ -110,7 +112,7 @@ class TestTransfer:
             balance_2_after = account_2_after.balance if account_2_after else 0
 
             # Проверяем, что баланс отправителя не изменился
-            assert balance_1_after == balance_1_before
+            assert balance_1_after == balance_1_before, 'Ошибка: баланс отправителя изменился после отклоненного перевода'
 
             # Проверяем, что баланс получателя не изменился
-            assert balance_2_after == balance_2_before
+            assert balance_2_after == balance_2_before, 'Ошибка: баланс получателя изменился после отклоненного перевода'

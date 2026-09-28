@@ -34,7 +34,7 @@ class TestCreditRequest:
                 name="Ответ сервера (ожидается статус-код 201)",  # Как это будет называться в отчете
                 attachment_type=allure.attachment_type.JSON  # Говорим Allure красиво подсветить JSON
             )
-        assert credit_request.status_code == 201
+        assert credit_request.status_code == 201, f'Ошибка: с сервера вернулся некорректный статус-код {credit_request.status_code}'
 
         credit_id = int(credit_request.json()['creditId'])
         credit_db = CreditCrudDb.get_credit_id(db_session, credit_id)
@@ -95,8 +95,10 @@ class TestCreditRequest:
                 attachment_type=allure.attachment_type.JSON  # Говорим Allure красиво подсветить JSON
             )
 
-            assert credit_request_new2.status_code == 404
+            assert credit_request_new2.status_code == 404, 'Ошибка: вернулся некорректный статус-код, запись должна быть не найдена'
 
             first_credit_db = CreditCrudDb.get_credit_id(db_session, first_credit_id)
-            assert first_credit_db is not None
-            assert first_credit_db.balance == -test_data['credit_amount']
+            assert first_credit_db is not None, 'Ошибка: ранее созданный кредит не найден в базе данных'
+            assert first_credit_db.balance == -test_data[
+                'credit_amount'], 'Ошибка: баланс существующего кредита изменился после запроса 404'
+

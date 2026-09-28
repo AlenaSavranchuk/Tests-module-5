@@ -13,7 +13,6 @@ from src.main.api.generators.data_generator import DataGenerator
 class TestCreditRequest:
 # функция на кредитик с фикстурой,у которой секретная роль для юзера 
     def test_credit_request_valid(self,secret_credit_user_with_accounts: dict, db_session: Session):
-        #  Подготовка данных из фикстуры
         account_2 = secret_credit_user_with_accounts['account_2']
         test_data = DataGenerator.get_credit_data()
         user_spec = secret_credit_user_with_accounts['user_spec']
@@ -36,11 +35,11 @@ class TestCreditRequest:
             attachment_type=allure.attachment_type.JSON  # Говорим Allure красиво подсветить JSON
         )
 
-        assert response_data.creditId is not None
-        assert response_data.creditId > 0
+        assert response_data.creditId is not None, f'Ошибка: в ответе сервера ID кредита пустое {response_data.creditId}'
+        assert response_data.creditId > 0, f'Ошибка: ID кредита в ответе от сервера должен быть строго больше 0'
 
         credit_request_db = CreditCrudDb.get_credit_id(db_session, response_data.creditId)
-        assert credit_request_db is not None
+        assert credit_request_db is not None, f'Ошибка: ID кредита в БД не найдена'
 
     # негативный тест на запрос получения кредита на тот же счет, что я уже взяла для первого кредита
     def test_credit_request_invalid(self,secret_credit_user_with_accounts: dict, db_session: Session):
@@ -85,5 +84,5 @@ class TestCreditRequest:
         )
 
         credit_request_db = CreditCrudDb.get_credit_count(db_session,account_2)
-        assert credit_request_db == 1
+        assert credit_request_db == 1, f'Ошибка: одидался 1 оформленный кредит, по факту количество: {credit_request_db}'
 

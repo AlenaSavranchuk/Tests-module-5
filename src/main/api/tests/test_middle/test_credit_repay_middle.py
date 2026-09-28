@@ -36,11 +36,12 @@ class TestCreditRepay:
             attachment_type=allure.attachment_type.JSON
         )
 
-        assert response.creditId == credit_data.creditId
-        assert response.amountDeposited == credit_data.amount
+        assert response.creditId == credit_data.creditId, f'Ошибка: id кредита от запроса и id кредита от ответа сервера не совпадают'
+        assert response.amountDeposited == credit_data.amount, f'Ошибка: сумма погашения кредита не равна. Ожидалось {credit_data.amount}, фактически: {response.amountDeposited}'
 
         credit_repay_db = CreditCrudDb.get_credit_id(db_session, active_credit_for_repay['credit_id'])
-        assert credit_repay_db.balance == 0
+        assert credit_repay_db is not None, f"Ошибка: кредит с ID {active_credit_for_repay['credit_id']} не найден в БД"
+        assert credit_repay_db.balance == 0, f'Ошибка: кредит не погашен полностью, по факту баланс {credit_repay_db.balance}'
 
     # негативный тест на погашение кредита (с невалидной суммой)
     def test_credit_request_invalid(self, active_credit_for_repay: dict, db_session: Session):
@@ -66,8 +67,8 @@ class TestCreditRepay:
             attachment_type=allure.attachment_type.JSON
         )
 
-        assert "amount" in error_response.text.lower()
+        assert "amount" in error_response.text.lower(), f'Ошибка: в ответе сервера нет упоминания поля суммы'
 
         credit_repay_db = CreditCrudDb.get_credit_id(db_session, active_credit_for_repay['credit_id'])
-        assert abs(credit_repay_db.balance) == active_credit_for_repay['credit_amount']
+        assert abs(credit_repay_db.balance) == active_credit_for_repay['credit_amount'], f'Ошибка: после неуспешного запроса баланс кредита в БД изменился'
 

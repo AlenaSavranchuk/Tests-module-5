@@ -16,7 +16,6 @@ from src.main.api.specs.response_specs_middle import ResponseSpecs
 @pytest.mark.senior
 class TestDepositAccount:
     def test_bank_account_deposit_valid(self, api_client: ApiManagerSenior, user_with_accounts: dict, db_session: Session):
-        api_client.user_steps.authorize(user_with_accounts['token_user'])
         test_data = DataGenerator.get_credit_data()
         account_data = user_with_accounts["account_1"]
         balance_before = AccountCrudDb.get_account_balance(db_session, account_data)
@@ -41,8 +40,6 @@ class TestDepositAccount:
     def test_bank_account_deposit_invalid(self,api_client: ApiManagerSenior, user_with_accounts: dict, db_session: Session):
         test_data = DataGenerator.get_credit_data()
         account_data = user_with_accounts["account_1"]
-        saved_token = user_with_accounts['token_user']
-        api_client.user_steps.token = None
 
         with allure.step('Пополнение счета'):
             deposit_account = PopolnenieDepositAccountRequestMidlle(
@@ -56,8 +53,6 @@ class TestDepositAccount:
                 expected_spec=ResponseSpecs.request_unauthorized(),
             )
 
-        api_client.user_steps.authorize(saved_token)
-
         deposit_from_db = TransactionCrud.get_transaction_id(db_session,deposit_account.accountId)
-        assert deposit_from_db is None
+        assert deposit_from_db is None, f'Ошибка:в базе обнаружен {deposit_from_db}'
 

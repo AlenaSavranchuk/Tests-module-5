@@ -42,15 +42,15 @@ class TestTransfer:
 
         db_session.expire_all()
 
-        assert transfer_accounts_response.fromAccountId == transfer_accounts.fromAccountId
-        assert transfer_accounts_response.toAccountId == transfer_accounts.toAccountId
+        assert transfer_accounts_response.fromAccountId == transfer_accounts.fromAccountId, 'Ошибка: ID отправителя в ответе и запросе не совпадают'
+        assert transfer_accounts_response.toAccountId == transfer_accounts.toAccountId, 'Ошибка: ID получателя в ответе и запросе не совпадают'
 
         balance_1_after = AccountCrudDb.get_account_balance(db_session, account_id1)
         balance_2_after = AccountCrudDb.get_account_balance(db_session, account_id2)
-        assert transfer_accounts_response.fromAccountIdBalance == balance_1_after
-        assert balance_1_before - amount == balance_1_after
-        assert balance_2_before + amount == balance_2_after
 
+        assert transfer_accounts_response.fromAccountIdBalance == balance_1_after, 'Ошибка: баланс отправителя в ответе API отличается от баланса в БД'
+        assert balance_1_before - amount == balance_1_after, 'Ошибка: сумма списания с баланса отправителя в БД рассчитана неверно'
+        assert balance_2_before + amount == balance_2_after, 'Ошибка: сумма зачисления на баланс получателя в БД рассчитана неверно'
 
         # негативный тест на этот же тест-кейс (нет токена авторизации)
     def test_transfer_middle_invalid(self, user_with_accounts: dict, db_session: Session):
@@ -81,6 +81,6 @@ class TestTransfer:
 
         db_session.expire_all()
 
-        assert 'JWT Token not found' in transfer_accounts_response.text
+        assert 'JWT Token not found' in transfer_accounts_response.text, 'Ошибка: в тексте ответа сервера нет сообщения об отсутствии JWT токена'
         balance_1_after = AccountCrudDb.get_account_balance(db_session, account_id1)
-        assert balance_1_before == balance_1_after, "Баг! Деньги списались со счета при неавторизованном запросе"
+        assert balance_1_before == balance_1_after, 'Ошибка: баланс отправителя изменился после неавторизованного запроса'
